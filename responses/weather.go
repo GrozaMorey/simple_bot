@@ -6,7 +6,10 @@ import (
 	"io"
 	"log"
 	"net/http"
+	reddb "simple_bot/redis"
+	"time"
 
+	"github.com/go-redis/redis"
 	tele "gopkg.in/telebot.v3"
 )
 
@@ -44,6 +47,17 @@ func WeatherMessage(city string, bot tele.Context) error {
 		"NW":  "северо-западное",
 		"NNW": "северо-северо-западный"}
 
+	rdb := reddb.GetRedis()
+
+	val, err := rdb.Get(city).Result()
+	if err == redis.Nil {
+		fmt.Printf("%s does not exist", city)
+	} else if err != nil {
+		panic(err)
+	} else if val != "0" {
+		return bot.Send(val)
+	}
+
 	weather_data := Weather(city)
 	message_text := "В городе %s сейчас %s, \n температура составляет %.1f градусов, \n Ощущается как: %.1f. \n Скорость ветра составляет %.1f км\\ч \n Направление %s \n Влажность составляет %d процентов \n"
 	response := fmt.Sprintf(
@@ -55,6 +69,7 @@ func WeatherMessage(city string, bot tele.Context) error {
 		weather_data.Data.Wind,
 		wind_dir[weather_data.Data.Wind_dir],
 		weather_data.Data.Humidity)
+	rdb.Set(city, response, 10*time.Minute).Err()
 	return bot.Send(response)
 }
 

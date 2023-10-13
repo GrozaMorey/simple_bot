@@ -3,10 +3,10 @@ package main
 import (
 	"fmt"
 	"log"
+	reddb "simple_bot/redis"
 	"simple_bot/responses"
 	"time"
 
-	"github.com/go-redis/redis"
 	_ "github.com/lib/pq"
 
 	tele "gopkg.in/telebot.v3"
@@ -14,12 +14,7 @@ import (
 )
 
 func main() {
-	rdb := redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
-		Password: "",
-		DB:       0,
-	})
-
+	rdb := reddb.GetRedis()
 	responsFunc := map[string]func(tele.Context) error{
 		"/hello": responses.Hello,
 	}
@@ -41,13 +36,11 @@ func main() {
 		userId := string(rune(c.Message().Chat.ID))
 
 		state, err := rdb.Get(userId).Result()
-		if err == redis.Nil {
-			log.Println("State was no define")
-		} else if err != nil {
+		if err != nil {
 			panic(err)
 		}
-		fmt.Println(state)
-		if state != "" {
+		fmt.Println(state, err)
+		if state == "1" {
 			rdb.Set(userId, false, 0).Err()
 			if err != nil {
 				panic(err)
