@@ -8,7 +8,9 @@ import (
 	"time"
 
 	_ "github.com/lib/pq"
+	"golang.org/x/text/language"
 
+	"github.com/bregydoc/gtranslate"
 	tele "gopkg.in/telebot.v3"
 	"gopkg.in/telebot.v3/middleware"
 )
@@ -45,7 +47,13 @@ func main() {
 			if err != nil {
 				panic(err)
 			}
-			return responses.WeatherMessage(c.Message().Text, c)
+
+			city, err := gtranslate.Translate(c.Message().Text, language.Russian, language.English)
+			if err != nil {
+				fmt.Printf("Cant translate %s", c.Message().Text)
+			}
+
+			return responses.WeatherMessage(city, c)
 		}
 
 		if c.Message().Text == "/weather" {
