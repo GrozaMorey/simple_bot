@@ -12,7 +12,6 @@ import (
 
 	"github.com/bregydoc/gtranslate"
 	tele "gopkg.in/telebot.v3"
-	"gopkg.in/telebot.v3/middleware"
 )
 
 func main() {
@@ -31,8 +30,8 @@ func main() {
 		return
 	}
 
-	b.Use(middleware.Logger())
-	b.Use(middleware.AutoRespond())
+	//b.Use(middleware.Logger())
+	//b.Use(middleware.AutoRespond())
 
 	b.Handle(tele.OnText, func(c tele.Context) error {
 		userId := string(rune(c.Message().Chat.ID))

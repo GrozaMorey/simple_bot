@@ -6,11 +6,13 @@ import (
 	"io"
 	"log"
 	"net/http"
-	reddb "simple_bot/redis"
+	"net/url"
 	"time"
 
 	"github.com/go-redis/redis"
 	tele "gopkg.in/telebot.v3"
+
+	reddb "simple_bot/redis"
 )
 
 type Response struct {
@@ -22,6 +24,10 @@ type Response struct {
 		Cloud     int     `json:"cloud"`
 		Feelslike float64 `json:"feelslike_c"`
 	} `json:"current"`
+}
+
+func (r *Response) Validate(string) error {
+	return nil
 }
 
 func WeatherMain(bot tele.Context) error {
@@ -45,13 +51,14 @@ func WeatherMessage(city string, bot tele.Context) error {
 		"W":   "западное",
 		"WNW": "западно-северо-западное",
 		"NW":  "северо-западное",
-		"NNW": "северо-северо-западный"}
+		"NNW": "северо-северо-западный",
+	}
 
 	rdb := reddb.GetRedis()
 
 	val, err := rdb.Get(city).Result()
 	if err == redis.Nil {
-		fmt.Printf("%s does not exist", city)
+		log.Printf("%s does not exist\n", city)
 	} else if err != nil {
 		panic(err)
 	} else if val != "0" {
@@ -75,13 +82,14 @@ func WeatherMessage(city string, bot tele.Context) error {
 
 func Weather(city string) Response {
 	api_key := "02d57a4ae70f484facf124135231210"
-	link := fmt.Sprintf("http://api.weatherapi.com/v1/current.json?key=%s&q=%s", api_key, city)
+	link := fmt.Sprintf("http://api.weatherapi.com/v1/current.json?key=%s&q=%s", api_key, url.QueryEscape(city))
 	request, err := http.Get(link)
 	if err != nil {
-		log.Fatal()
+		log.Fatal(err, "PIZDEEEZ")
 	}
-	defer request.Body.Close()
+	log.Println(request.Status)
 
+	defer request.Body.Close()
 	body, err := io.ReadAll(request.Body)
 	if err != nil {
 		log.Fatal()
@@ -105,5 +113,4 @@ func WeatherCondition(cloud int) string {
 	} else {
 		return "пасмурно"
 	}
-
 }
