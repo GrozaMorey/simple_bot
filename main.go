@@ -21,7 +21,7 @@ func main() {
 	}
 
 	pref := tele.Settings{
-		Token:  "6216320540:AAHv5cUkrYWrLU4h5LJ7N-kUKx7LPLAuC54",
+		Token:  "token",
 		Poller: &tele.LongPoller{Timeout: 10 * time.Second},
 	}
 	b, err := tele.NewBot(pref)
